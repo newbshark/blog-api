@@ -10,3 +10,4 @@ export const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
 };
+console.log(dotenv.config());

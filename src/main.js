@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import * as path from 'node:path';
-const p = path.resolve(process.cwd(), '.env');
+const p = path.resolve(process.cwd(),'../','.env');
 dotenv.config({ path: p});
 
 import cors from 'cors';
@@ -9,6 +9,7 @@ import { jwtValidationMiddleware } from './middleware/authenticate.js';
 
 import { login, register } from './services/auth/index.js';
 import { createPost, getUsersPosts } from "./services/posts/index.js";
+import {dbConfig} from "./config/index.js";
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.use(express.json());
 
 app.post('/login', login);
 app.post('/register', register);
-
+console.log(dbConfig);
 app.use(jwtValidationMiddleware);
 
 app.post('/posts/create', createPost);
