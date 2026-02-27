@@ -10,5 +10,6 @@ export function authenticate(accessToken)  {
         console.log(decoded);
         return decoded.userId;
     } catch (e) {
+        console.log(e);
     }
 }

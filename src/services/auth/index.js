@@ -1,10 +1,6 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import pg from 'pg';
-import { dbConfig } from '../../config/index.js';
-
-const client = new pg.Client(dbConfig);
-client.connect();
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { pool } from '../../config/index.js';
 
 export async function login(req, res) {
     const body = req.body;
@@ -17,7 +13,7 @@ export async function login(req, res) {
         return;
     }
 
-    const userFromDb = await client.query('SELECT * FROM users WHERE email=$1', [body.email]);
+    const userFromDb = await pool.query('SELECT * FROM users WHERE email=$1', [body.email]);
 
     if (userFromDb.rows.length === 0) {
         res.status(400).send('Invalid email or password');
@@ -58,7 +54,7 @@ export async function register(req, res) {
     const { name, email, password } = req.body;
 
 
-    const existingUsers = await client.query('SELECT id FROM users WHERE email=$1 OR name=$2 LIMIT 1', [
+    const existingUsers = await pool.query('SELECT id FROM users WHERE email=$1 OR name=$2 LIMIT 1', [
         email, name,
     ]);
     if (existingUsers.rows.length > 0) {
@@ -66,7 +62,7 @@ export async function register(req, res) {
     }
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const resultFromDB = await client.query('INSERT INTO users VALUES (DEFAULT, $1, $2, $3) RETURNING id', [name, email, passwordHash]);
+    const resultFromDB = await pool.query('INSERT INTO users VALUES (DEFAULT, $1, $2, $3) RETURNING id', [name, email, passwordHash]);
     const userId = resultFromDB.rows[0].id;
     return res.status(200).send({ userId });
 }

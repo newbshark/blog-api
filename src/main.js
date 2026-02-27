@@ -1,8 +1,4 @@
 import express from 'express';
-import dotenv from 'dotenv';
-import * as path from 'node:path';
-const p = path.resolve(process.cwd(), '.env');
-dotenv.config({ path: p});
 
 import cors from 'cors';
 import { jwtValidationMiddleware } from './middleware/authenticate.js';
@@ -20,7 +16,7 @@ app.post('/register', register);
 
 app.use(jwtValidationMiddleware);
 
-app.post('/posts/create', createPost);
+app.post('/posts', createPost);
 app.get('/posts', getUsersPosts);
 
 app.listen(process.env.PORT, () => {
