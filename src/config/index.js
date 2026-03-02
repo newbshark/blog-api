@@ -1,13 +1,19 @@
+import pg from 'pg';
 import dotenv from 'dotenv';
 import * as path from 'node:path';
+const p = path.resolve(process.cwd(), '.env');
+dotenv.config({
+    path: p,
+});
+console.log(p);
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env')});
 
-export const dbConfig = {
+const pool = new pg.Pool({
     host: 'localhost',
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-};
-console.log(dotenv.config());
+});
+
+export { pool };
