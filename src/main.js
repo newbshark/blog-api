@@ -5,6 +5,7 @@ import { jwtValidationMiddleware } from './middleware/authenticate.js';
 
 import { login, register } from './services/auth/index.js';
 import { createPost, getUsersPosts } from "./services/posts/index.js";
+import {dbConfig} from "./config/index.js";
 
 const app = express();
 
@@ -13,7 +14,7 @@ app.use(express.json());
 
 app.post('/login', login);
 app.post('/register', register);
-
+console.log(dbConfig);
 app.use(jwtValidationMiddleware);
 
 app.post('/posts', createPost);
