@@ -62,7 +62,7 @@ export async function register(req, res) {
     }
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const resultFromDB = await pool.query('INSERT INTO users VALUES (DEFAULT, $1, $2, $3) RETURNING id', [name, email, passwordHash]);
+    const resultFromDB = await pool.query('INSERT INTO users VALUES (DEFAULT, $1, $2, $3) RETURNING id', [email, name, passwordHash]);
     const userId = resultFromDB.rows[0].id;
     return res.status(200).send({ userId });
 }

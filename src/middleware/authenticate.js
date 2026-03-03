@@ -11,7 +11,6 @@ export async function jwtValidationMiddleware(req, res, next) {
             statusCode: 401,
             anyCustomData: '...',
         });
-        return;
     } else {
         // USER ID ЕСТЬ!
         req.user = {
