@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/main.js",
-    "dev": "node --watch src/main.js"
+    "dev": "node --watch src/main.js",
+    "migrate:up": "node-pg-migrate up --migrations-dir migrations",
+    "migrate:down": "node-pg-migrate down --migrations-dir migrations",
+    "migrate:create": "node-pg-migrate create --migrations-dir migrations"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +21,8 @@
     "express": "5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^8.0.4"
   }
 }
