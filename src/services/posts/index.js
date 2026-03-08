@@ -51,9 +51,14 @@ export async function createPost(req, res)  {
 export async function updatePost(req, res)  {
     try {
         const userId = req.user.id;
-        const { post_id, content } = req.body;
+        const { post_id, content, title } = req.body;
 
-        console.log('Updating post:', { post_id, content, userId }); // отладка
+        console.log('Updating post:', { post_id, content, userId });
+
+        if (!title){
+            res.status(400).json({err: 'title must be at least 1 character'});
+            return;
+        }
 
         if(!post_id){
             return res.status(400).json({err:"missing post_id"});
@@ -77,8 +82,8 @@ export async function updatePost(req, res)  {
         }
 
         const upgradedPost = await pool.query(
-            'UPDATE posts SET content = $1, updated_at = NOW() WHERE post_id = $2 AND "userId" = $3 RETURNING *',
-            [content, post_id, userId]
+            'UPDATE posts SET content = $1, title = $4, updated_at = NOW() WHERE post_id = $2 AND "userId" = $3 RETURNING *',
+            [content, post_id, userId, title]
         );
 
         return res.status(200).json({
