@@ -46,31 +46,58 @@ export async function createPost(req, res)  {
     });
 }
 
-export async function updatePost(req, res)  {
-    const userId = req.user.id;
-    const postId = req.body.post_id;
-    const content = req.body.content;
-    if (content.length < 3||content.length === 0) {
-        res.status(400).json({ message: "Content must be at least 3 characters long" });
-        return;
-    }
-    const ifPostExist = await pool.query('SELECT post_id FROM posts WHERE post_id = $1 AND "userId" = $2',
-        [postId, userId]);
-    if (ifPostExist.rows.length === 0) {
-        res.status(404).json({message: 'post does not exist'});
-        return;
-    }
-    const upgradedPost = await pool.query('UPDATE posts SET content = $1, updated_at = NOW() WHERE post_id = $2 AND "userId" = $3 RETURNING *',
-        [content, postId, userId]);
-    const upgradedPostResult = upgradedPost.rows[0];
-    res.status(200).json({
-        result: upgradedPostResult,
-    });
 
+
+export async function updatePost(req, res)  {
+    try {
+        const userId = req.user.id;
+        const { post_id, content } = req.body;
+
+        console.log('Updating post:', { post_id, content, userId }); // отладка
+
+        if(!post_id){
+            return res.status(400).json({err:"missing post_id"});
+        }
+        if (post_id < 1) {
+            return res.status(400).json({err:"bad request"});
+        }
+        if (!content || content.length < 3) {
+            return res.status(400).json({
+                message: "Content must be at least 3 characters long"
+            });
+        }
+
+        const ifPostExist = await pool.query(
+            'SELECT post_id FROM posts WHERE post_id = $1 AND "userId" = $2',
+            [post_id, userId]
+        );
+
+        if (ifPostExist.rows.length === 0) {
+            return res.status(404).json({message: 'post does not exist'});
+        }
+
+        const upgradedPost = await pool.query(
+            'UPDATE posts SET content = $1, updated_at = NOW() WHERE post_id = $2 AND "userId" = $3 RETURNING *',
+            [content, post_id, userId]
+        );
+
+        return res.status(200).json({
+            result: upgradedPost.rows[0]
+        });
+
+    } catch (error) {
+        console.error('ERROR in updatePost:', error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            error: error.message  // временно, для отладки
+        });
+    }
 
 
 }
 
 export async function deletePost(req, res)  {
     const userId = req.user.id;
+    const postId =req.body.post_id;
+
 }
