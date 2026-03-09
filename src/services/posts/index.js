@@ -72,12 +72,12 @@ export async function updatePost(req, res)  {
             });
         }
 
-        const ifPostExist = await pool.query(
+        const isPostExist = await pool.query(
             'SELECT post_id FROM posts WHERE post_id = $1 AND "userId" = $2',
             [post_id, userId]
         );
 
-        if (ifPostExist.rows.length === 0) {
+        if (isPostExist.rows.length === 0) {
             return res.status(404).json({message: 'post does not exist'});
         }
 
