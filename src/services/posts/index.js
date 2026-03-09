@@ -101,8 +101,42 @@ export async function updatePost(req, res)  {
 
 }
 
-export async function deletePost(req, res)  {
-    const userId = req.user.id;
-    const postId =req.body.post_id;
+export async function deletePost(req, res) {
+    try {
+        const userId = req.user.id;
+        const postId = req.body.post_id;
 
+        console.log('Delete attempt - User:', userId, 'Post:', postId);
+
+        if (!postId) {
+            return res.status(400).json({ error: 'missing post_id' });
+        }
+
+        // Use double quotes around "userId" to preserve case sensitivity
+        const deletedPost = await pool.query(
+            'DELETE FROM posts WHERE post_id = $1 AND "userId" = $2 RETURNING *',
+            [postId, userId]
+        );
+
+        if (deletedPost.rows.length === 0) {
+            return res.status(404).json({
+                error: 'post does not exist or you do not have permission to delete it'
+            });
+        }
+
+        return res.status(200).json({
+            message: 'Post deleted successfully',
+            post: deletedPost.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error deleting post:', {
+            message: error.message,
+            code: error.code,
+            detail: error.detail,
+            hint: error.hint
+        });
+
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 }
