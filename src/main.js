@@ -15,9 +15,9 @@ app.post('/login', login);
 app.post('/register', register);
 app.use(jwtValidationMiddleware);
 
-app.post('/posts/create', createPost);
-app.post('/posts/update', updatePost);
-app.post('/posts/delete', deletePost);
+app.post('/posts', createPost);
+app.patch('/posts/:id', updatePost);
+app.delete('/posts/:id', deletePost);
 app.get('/posts', getUsersPosts);
 
 
