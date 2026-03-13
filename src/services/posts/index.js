@@ -14,7 +14,12 @@ export async function createPost(req, res)  {
     const userId = req.user.id; // 7
     const title = req.body.title;
     const content = req.body.content;
-    const blogId = req.body.blogId; // 4
+    const blogId = req.body.blog_id; //
+    // {
+    //     "title":"",
+    //     "content":"",
+    //     "blog_id":""
+    // }// 4
 
     if (title.length < 3) {
         res.status(400).json({
@@ -30,14 +35,16 @@ export async function createPost(req, res)  {
         return;
     }
 
-    const isBlogExists = await pool.query('SELECT id FROM blogs WHERE id = $1 AND created_by = $2', [blogId, userId]);
+    const isBlogExists = await pool.query('SELECT id FROM blogs WHERE id = $1 AND user_id = $2', [
+        blogId, userId
+    ]);
     if (isBlogExists.rows.length === 0) {
         res.status(404).json({});
         return;
     }
 
-    const createdPostResult = await pool.query('INSERT INTO posts VALUES (DEFAULT, $1, $2, $3, $4) RETURNING post_id', [
-        title, content, userId, blogId,
+    const createdPostResult = await pool.query('INSERT INTO posts VALUES (DEFAULT, $1, $2, $3, $4, FALSE) RETURNING id', [
+        title, content, userId, blogId
     ]);
     const postId = createdPostResult.rows[0].id;
 
@@ -51,19 +58,20 @@ export async function createPost(req, res)  {
 export async function updatePost(req, res)  {
     try {
         const userId = req.user.id;
-        const { post_id, content, title } = req.body;
+        const {  content , title } = req.body;
+        const postId = req.params.id;
 
-        console.log('Updating post:', { post_id, content, userId });
+        console.log('Updating post:', { postId, content, userId });
 
         if (!title){
             res.status(400).json({err: 'title must be at least 1 character'});
             return;
         }
 
-        if(!post_id){
+        if (!postId){
             return res.status(400).json({err:"missing post_id"});
         }
-        if (post_id < 1) {
+        if (postId < 1) {
             return res.status(400).json({err:"bad request"});
         }
         if (!content || content.length < 3) {
@@ -73,8 +81,8 @@ export async function updatePost(req, res)  {
         }
 
         const isPostExist = await pool.query(
-            'SELECT post_id FROM posts WHERE post_id = $1 AND "userId" = $2',
-            [post_id, userId]
+            'SELECT id FROM posts WHERE id = $1 AND user_id = $2',
+            [postId, userId]
         );
 
         if (isPostExist.rows.length === 0) {
@@ -82,8 +90,8 @@ export async function updatePost(req, res)  {
         }
 
         const upgradedPost = await pool.query(
-            'UPDATE posts SET content = $1, title = $4, updated_at = NOW() WHERE post_id = $2 AND "userId" = $3 RETURNING *',
-            [content, post_id, userId, title]
+            'UPDATE posts SET content = $1, title = $2 WHERE id = $3 AND user_id = $4 RETURNING *',
+            [content, title, postId, userId]
         );
 
         return res.status(200).json({
@@ -104,7 +112,7 @@ export async function updatePost(req, res)  {
 export async function deletePost(req, res) {
     try {
         const userId = req.user.id;
-        const postId = req.body.post_id;
+        const postId = req.params.id;
 
         console.log('Delete attempt - User:', userId, 'Post:', postId);
 
@@ -114,8 +122,9 @@ export async function deletePost(req, res) {
 
         // Use double quotes around "userId" to preserve case sensitivity
         const deletedPost = await pool.query(
-            'DELETE FROM posts WHERE post_id = $1 AND "userId" = $2 RETURNING *',
-            [postId, userId]
+            'DELETE FROM posts WHERE id = $1 AND user_id = $2 RETURNING *', [
+                postId, userId
+            ]
         );
 
         if (deletedPost.rows.length === 0) {

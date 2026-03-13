@@ -13,7 +13,9 @@ export async function login(req, res) {
         return;
     }
 
-    const userFromDb = await pool.query('SELECT * FROM users WHERE email=$1', [body.email]);
+    const userFromDb = await pool.query('SELECT * FROM users WHERE email=$1', [
+        body.email
+        ]);
 
     if (userFromDb.rows.length === 0) {
         res.status(400).send('Invalid email or password');
@@ -55,14 +57,16 @@ export async function register(req, res) {
 
 
     const existingUsers = await pool.query('SELECT id FROM users WHERE email=$1 OR name=$2 LIMIT 1', [
-        email, name,
+        email, name
     ]);
     if (existingUsers.rows.length > 0) {
         return res.status(400).send('User already exists');
     }
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const resultFromDB = await pool.query('INSERT INTO users VALUES (DEFAULT, $1, $2, $3) RETURNING id', [email, name, passwordHash]);
+    const resultFromDB = await pool.query('INSERT INTO users VALUES (DEFAULT, $1, $2, $3) RETURNING id', [
+        email, name, passwordHash
+    ]);
     const userId = resultFromDB.rows[0].id;
     return res.status(200).send({ userId });
 }
