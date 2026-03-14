@@ -1,16 +1,26 @@
-import { pool } from '../../config/index.js';
+import {pool} from '../../config/index.js';
 
-export async function getUsersPosts(req, res)  {
+export async function getUsersPosts(req, res) {
     const userId = req.user.id;
-    res.status(200).json({
-        success: true,
-        userId: userId,
-        message: 'getUsersPosts',
-    });
+    try {
+
+        const getPosts = await pool.query(
+            'SELECT id, title, content FROM posts WHERE user_id = $1',
+            [userId]
+        );
+
+        if (getPosts.rows.length === 0) {
+            return res.status(404).json({ notFound: true });
+        }
+
+        return res.status(200).json(getPosts.rows);
+    } catch (err) {
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 // Юзер создает пост
-export async function createPost(req, res)  {
+export async function createPost(req, res) {
     const userId = req.user.id; // 7
     const title = req.body.title;
     const content = req.body.content;
@@ -54,25 +64,24 @@ export async function createPost(req, res)  {
 }
 
 
-
-export async function updatePost(req, res)  {
+export async function updatePost(req, res) {
     try {
         const userId = req.user.id;
-        const {  content , title } = req.body;
+        const {content, title} = req.body;
         const postId = req.params.id;
 
-        console.log('Updating post:', { postId, content, userId });
+        console.log('Updating post:', {postId, content, userId});
 
-        if (!title){
+        if (!title) {
             res.status(400).json({err: 'title must be at least 1 character'});
             return;
         }
 
-        if (!postId){
-            return res.status(400).json({err:"missing post_id"});
+        if (!postId) {
+            return res.status(400).json({err: "missing post_id"});
         }
         if (postId < 1) {
-            return res.status(400).json({err:"bad request"});
+            return res.status(400).json({err: "bad request"});
         }
         if (!content || content.length < 3) {
             return res.status(400).json({
@@ -117,7 +126,7 @@ export async function deletePost(req, res) {
         console.log('Delete attempt - User:', userId, 'Post:', postId);
 
         if (!postId) {
-            return res.status(400).json({ error: 'missing post_id' });
+            return res.status(400).json({error: 'missing post_id'});
         }
 
         // Use double quotes around "userId" to preserve case sensitivity
@@ -146,6 +155,6 @@ export async function deletePost(req, res) {
             hint: error.hint
         });
 
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({error: 'Internal server error'});
     }
 }
