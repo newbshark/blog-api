@@ -1,8 +1,10 @@
 import {pool} from "../../config/index.js";
 
 export async function getUsersBlogs(req, res) {
-    const userId = req.user.id;
+
     try {
+    const userId = req.user.id;
+
 
         const getBlogs = await pool.query(
             'SELECT user_id, title FROM blogs WHERE user_id = $1',
@@ -15,4 +17,58 @@ export async function getUsersBlogs(req, res) {
     } catch (err) {
         return res.status(500).json({notFound: true});
     }
+}
+
+export async function createBlog(req, res) {
+    try {
+        const userId = req.user.id;
+        const title = req.body.title;
+
+        if (!title) {
+            return res.status(400).json({ error: "title is required" });
+        }
+
+        if (title.length < 3) {
+            return res.status(400).json({ error: "title too short (minimum 3 characters)" });
+        }
+        const createdBlog = await pool.query(
+            'INSERT INTO blogs VALUES (DEFAULT, $1, $2) RETURNING *',
+            [title, userId]
+        );
+        return res.status(201).json(createdBlog.rows[0]);
+
+    }catch(err) {
+        return res.status(500).json({error: 'something went wrong'});
+    }
+}
+
+export async function updateBlog(req, res) {
+    try {
+        const userId = req.user.id;
+        const title = req.body.title;
+        const blogId = req.params.id;
+
+        if (!title) {
+            return res.status(400).json({error: "title is required"});
+        }
+        if (title.length < 3) {
+            return res.status(400).json({error: "title too short (minimum 3 characters)"});
+        }
+        const isBlogExist = await pool.query(
+            "SELECT id FROM blogs WHERE id = $1 AND user_id = $2",
+            [blogId, userId]
+        );
+        if (isBlogExist.rows.length === 0) {
+            return res.status(404).json({notFound: true});
+        }
+
+            const upgradedBlog = await pool.query("UPDATE blogs SET title = $1 WHERE id = $2 ", [title, blogId]);
+            return res.status(200).json(upgradedBlog.rows[0]);
+
+        }
+    catch
+        (err)
+        {
+            return res.status(500).json({error: 'something went wrong'});
+        }
 }
