@@ -62,13 +62,33 @@ export async function updateBlog(req, res) {
             return res.status(404).json({notFound: true});
         }
 
-            const upgradedBlog = await pool.query("UPDATE blogs SET title = $1 WHERE id = $2 ", [title, blogId]);
-            return res.status(200).json(upgradedBlog.rows[0]);
+        const upgradedBlog = await pool.query("UPDATE blogs SET title = $1 WHERE id = $2 ", [title, blogId]);
+        return res.status(200).json(upgradedBlog.rows[0]);
 
+    } catch
+        (err) {
+        return res.status(500).json({error: 'something went wrong'});
+    }
+}
+
+export async function deleteBlog(req, res) {
+    try {
+        const userId = req.user.id;
+        const blogId = req.params.id;
+        if (!blogId) {
+            return res.status(400).json({error: "blogId is required"});
         }
-    catch
-        (err)
-        {
-            return res.status(500).json({error: 'something went wrong'});
+        const deletedBlog = await pool.query('DELETE FROM blogs WHERE id = $1 AND user_id = $2 RETURNING *',[
+            blogId, userId
+        ]);
+        if (deletedBlog.rows.length === 0) {
+            return res.status(404).json({
+                "error": "Blog not found or you don't have permission to delete it"
+            });
         }
+        return res.status(200).json(deletedBlog.rows[0], {message: "blog deleted successfully."});
+    }
+    catch (err) {
+        return res.status(500).json({error: 'something went wrong'});
+    }
 }
