@@ -19,6 +19,7 @@ app.use(jwtValidationMiddleware);
 app.post('/posts', createPost);
 app.patch('/posts/:id', updatePost);
 app.delete('/posts/:id', deletePost);
+
 app.get('/posts', getUsersPosts);
 
 app.get('/blogs', getUsersBlogs);
