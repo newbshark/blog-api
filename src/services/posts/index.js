@@ -1,16 +1,26 @@
 import { pool } from '../../config/index.js';
 
-export async function getUsersPosts(req, res)  {
+export async function getUsersPosts(req, res) {
     const userId = req.user.id;
-    res.status(200).json({
-        success: true,
-        userId: userId,
-        message: 'getUsersPosts',
-    });
+    try {
+
+        const getPosts = await pool.query(
+            'SELECT id, title, content FROM posts WHERE user_id = $1',
+            [userId]
+        );
+
+        if (getPosts.rows.length === 0) {
+            return res.status(200).json({ notCreatedYet: true });
+        }
+
+        return res.status(200).json(getPosts.rows);
+    } catch (err) {
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 // Юзер создает пост
-export async function createPost(req, res)  {
+export async function createPost(req, res){
     const userId = req.user.id; // 7
     const title = req.body.title;
     const content = req.body.content;
@@ -39,7 +49,7 @@ export async function createPost(req, res)  {
         blogId, userId
     ]);
     if (isBlogExists.rows.length === 0) {
-        res.status(404).json({});
+        res.status(200).json({note:"notCreatedYet"});
         return;
     }
 
@@ -54,25 +64,24 @@ export async function createPost(req, res)  {
 }
 
 
-
-export async function updatePost(req, res)  {
+export async function updatePost(req, res){
     try {
         const userId = req.user.id;
-        const {  content , title } = req.body;
+        const {content, title} = req.body;
         const postId = req.params.id;
 
-        console.log('Updating post:', { postId, content, userId });
+        console.log('Updating post:', {postId, content, userId});
 
-        if (!title){
-            res.status(400).json({err: 'title must be at least 1 character'});
+        if (!title) {
+            res.status(400).json({note: 'title must be at least 1 character'});
             return;
         }
 
-        if (!postId){
-            return res.status(400).json({err:"missing post_id"});
+        if (!postId) {
+            return res.status(400).json({notFound: "missing post_id"});
         }
         if (postId < 1) {
-            return res.status(400).json({err:"bad request"});
+            return res.status(400).json({note: "bad request"});
         }
         if (!content || content.length < 3) {
             return res.status(400).json({
@@ -86,7 +95,7 @@ export async function updatePost(req, res)  {
         );
 
         if (isPostExist.rows.length === 0) {
-            return res.status(404).json({message: 'post does not exist'});
+            return res.status(200).json({message: 'post does not exist'});
         }
 
         const upgradedPost = await pool.query(
@@ -109,7 +118,7 @@ export async function updatePost(req, res)  {
 
 }
 
-export async function deletePost(req, res) {
+export async function deletePost(req, res)  {
     try {
         const userId = req.user.id;
         const postId = req.params.id;
@@ -117,7 +126,7 @@ export async function deletePost(req, res) {
         console.log('Delete attempt - User:', userId, 'Post:', postId);
 
         if (!postId) {
-            return res.status(400).json({ error: 'missing post_id' });
+            return res.status(400).json({note: 'missing post_id'});
         }
 
         // Use double quotes around "userId" to preserve case sensitivity
@@ -128,8 +137,8 @@ export async function deletePost(req, res) {
         );
 
         if (deletedPost.rows.length === 0) {
-            return res.status(404).json({
-                error: 'post does not exist or you do not have permission to delete it'
+            return res.status(200).json({
+                note: 'post does not exist or you do not have permission to delete it'
             });
         }
 
@@ -146,6 +155,6 @@ export async function deletePost(req, res) {
             hint: error.hint
         });
 
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({error: 'Internal server error'});
     }
 }
