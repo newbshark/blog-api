@@ -31,7 +31,7 @@ export async function getUsersPosts(req, res) {
         );
 
         if (getPosts.rows.length === 0) {
-            return res.status(200).json({ notCreatedYet: true });
+            return res.status(200).json({});
         }
 
         return res.status(200).json(getPosts.rows);
@@ -109,9 +109,10 @@ export async function updatePost(req, res){
                 message: "Content must be at least 3 characters long"
             });
         }
+        const queryTemplate = 'SELECT id FROM posts WHERE id = $1 AND user_id = $2';
 
         const isPostExist = await pool.query(
-            'SELECT id FROM posts WHERE id = $1 AND user_id = $2',
+            queryTemplate,
             [postId, userId]
         );
 
