@@ -1,4 +1,4 @@
-import { pool } from "../../config/index.js";
+import { pool } from "../../config/index.ts";
 
 export async function getUsersBlogs(req, res){
     try {

@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { pool } from '../../config/index.js';
+import { pool } from '../../config/index.ts';
 
 export async function login(req, res) {
     const body = req.body;
