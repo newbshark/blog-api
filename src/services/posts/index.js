@@ -1,12 +1,33 @@
 import { pool } from '../../config/index.ts';
 
+// limit=20&page=1&searchQuery=солнышко
 export async function getUsersPosts(req, res) {
-    const userId = req.user.id;
+    const userId = req.user?.id ?? 7;
+
+    const searchQuery = req.query.searchQuery;
+    const limit = parseInt(req.query.limit ?? '20');
+    const page = parseInt(req.query.page ?? '1');
     try {
+        let queryToDb = 'SELECT id, title, content FROM posts WHERE user_id = $1';
+        const queryParams = [userId];
+        let paramsIndex = 2;
+        if (searchQuery) {
+            queryToDb = `${queryToDb} AND title ILIKE $${paramsIndex} AND content ILIKE $${paramsIndex} `;
+            queryParams.push(searchQuery);
+            paramsIndex++;
+        }
+
+        queryToDb = `${queryToDb} LIMIT $${paramsIndex}`;
+        paramsIndex++;
+        queryParams.push(limit);
+
+        const offset = (page - 1) * limit;
+        queryToDb = `${queryToDb} OFFSET $${paramsIndex}`;
+        queryParams.push(offset);
 
         const getPosts = await pool.query(
-            'SELECT id, title, content FROM posts WHERE user_id = $1',
-            [userId]
+            queryToDb,
+            queryParams,
         );
 
         if (getPosts.rows.length === 0) {
