@@ -30,11 +30,10 @@ export async function getUsersPosts(req, res) {
             queryParams,
         );
 
-        if (getPosts.rows.length === 0) {
-            return res.status(200).json({});
-        }
+    if (getPosts.length === 0) {
+        return res.status(200).json([]);
+}
 
-        return res.status(200).json(getPosts.rows);
     } catch (err) {
         return res.status(500).json({ error: "Internal server error" });
     }
@@ -60,18 +59,15 @@ export async function createPost(req, res){
     }
 
     if (content.length === 0) {
-        res.status(400).json({
-            message: 'content must be at least 1 character',
-        })
-        return;
+        return res.status(400).json({});
     }
 
     const isBlogExists = await pool.query('SELECT id FROM blogs WHERE id = $1 AND user_id = $2', [
         blogId, userId
     ]);
     if (isBlogExists.rows.length === 0) {
-        res.status(200).json({note:"notCreatedYet"});
-        return;
+
+            return res.status(200).json([]);
     }
 
     const createdPostResult = await pool.query('INSERT INTO posts VALUES (DEFAULT, $1, $2, $3, $4, FALSE) RETURNING id', [
@@ -117,7 +113,7 @@ export async function updatePost(req, res){
         );
 
         if (isPostExist.rows.length === 0) {
-            return res.status(200).json({message: 'post does not exist'});
+            return res.status(200).json([]);
         }
 
         const upgradedPost = await pool.query(
@@ -159,9 +155,7 @@ export async function deletePost(req, res)  {
         );
 
         if (deletedPost.rows.length === 0) {
-            return res.status(200).json({
-                note: 'post does not exist or you do not have permission to delete it'
-            });
+            return res.status(200).json([]);
         }
 
         return res.status(200).json({

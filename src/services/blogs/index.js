@@ -83,7 +83,7 @@ export async function updateBlog(req, res){
             [blogId, userId]
         );
         if (isBlogExist.rows.length === 0) {
-            return res.status(200).json({notFound: true});
+            return res.status(200).json([]);
         }
 
         const upgradedBlog = await pool.query("UPDATE blogs SET title = $1 WHERE id = $2 ", [title, blogId]);
@@ -106,9 +106,7 @@ export async function deleteBlog(req, res){
             blogId, userId
         ]);
         if (deletedBlog.rows.length === 0) {
-            return res.status(200).json({
-                "note": "Blog not found or you don't have permission to delete it"
-            });
+            return res.status(200).json([]);
         }
         return res.status(200).json(deletedBlog.rows[0], {message: "blog deleted successfully."});
     }
