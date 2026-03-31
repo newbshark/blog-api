@@ -15,6 +15,7 @@ app.use(express.json());
 
 app.post('/login', login);
 app.post('/register', register);
+
 app.use(jwtValidationMiddleware);
 
 app.post('/posts', createPost);
