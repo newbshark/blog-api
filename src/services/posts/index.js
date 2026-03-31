@@ -1,4 +1,4 @@
-import { pool } from '../../config/index.js';
+import { pool } from '../../config/index.ts';
 
 // limit=20&page=1&searchQuery=солнышко
 export async function getUsersPosts(req, res) {
