@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+    import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { jwtSecret, pool } from '../../config/index.js';
 import { Request, Response } from 'express';

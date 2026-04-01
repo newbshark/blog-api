@@ -1,19 +1,21 @@
-import { pool } from '../../config/index.ts';
+import { pool } from '../../config/index.js';
+import {Request, Response} from 'express';
+import {isNumberObject} from "node:util/types";
 
 // limit=20&page=1&searchQuery=солнышко
-export async function getUsersPosts(req, res) {
+export async function getUsersPosts(req:Request, res:Response) {
     const userId = req.user?.id ?? 7;
 
     const searchQuery = req.query.searchQuery;
-    const limit = parseInt(req.query.limit ?? '20');
-    const page = parseInt(req.query.page ?? '1');
+    const limit = parseInt(req.query.limit as string ?? '20');
+    const page = parseInt(req.query.page as string ?? '1');
     try {
         let queryToDb = 'SELECT id, title, content FROM posts WHERE user_id = $1';
-        const queryParams = [userId];
+        const queryParams:(number|string)[] = [userId];
         let paramsIndex = 2;
         if (searchQuery) {
             queryToDb = `${queryToDb} AND title ILIKE $${paramsIndex} AND content ILIKE $${paramsIndex} `;
-            queryParams.push(searchQuery);
+            queryParams.push(`%${searchQuery}%`);
             paramsIndex++;
         }
 
@@ -27,22 +29,17 @@ export async function getUsersPosts(req, res) {
 
         const getPosts = await pool.query(
             queryToDb,
-            queryParams,
+            queryParams
         );
-
-        if (getPosts.rows.length === 0) {
-            return res.status(200).json({ notCreatedYet: true });
-        }
-
-        return res.status(200).json(getPosts.rows);
+        return res.status(200).json([getPosts.rows]);
     } catch (err) {
         return res.status(500).json({ error: "Internal server error" });
     }
 }
 
 // Юзер создает пост
-export async function createPost(req, res){
-    const userId = req.user.id; // 7
+export async function createPost(req: Request, res: Response){
+    const userId = req.user?.id; // 7
     const title = req.body.title;
     const content = req.body.content;
     const blogId = req.body.blog_id; //
@@ -60,18 +57,15 @@ export async function createPost(req, res){
     }
 
     if (content.length === 0) {
-        res.status(400).json({
-            message: 'content must be at least 1 character',
-        })
-        return;
+        return res.status(400).json({note:"fill content line"});
     }
 
     const isBlogExists = await pool.query('SELECT id FROM blogs WHERE id = $1 AND user_id = $2', [
         blogId, userId
     ]);
     if (isBlogExists.rows.length === 0) {
-        res.status(200).json({note:"notCreatedYet"});
-        return;
+
+            return res.status(200).json(isBlogExists.rows[0]);
     }
 
     const createdPostResult = await pool.query('INSERT INTO posts VALUES (DEFAULT, $1, $2, $3, $4, FALSE) RETURNING id', [
@@ -85,11 +79,11 @@ export async function createPost(req, res){
 }
 
 
-export async function updatePost(req, res){
+export async function updatePost(req: Request, res: Response){
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id;
         const {content, title} = req.body;
-        const postId = req.params.id;
+        const postId = Number(req.params.id);
 
         console.log('Updating post:', {postId, content, userId});
 
@@ -109,14 +103,15 @@ export async function updatePost(req, res){
                 message: "Content must be at least 3 characters long"
             });
         }
+        const queryTemplate = 'SELECT id FROM posts WHERE id = $1 AND user_id = $2';
 
         const isPostExist = await pool.query(
-            'SELECT id FROM posts WHERE id = $1 AND user_id = $2',
+            queryTemplate,
             [postId, userId]
         );
 
         if (isPostExist.rows.length === 0) {
-            return res.status(200).json({message: 'post does not exist'});
+            return res.status(200).json({isPostExists: isPostExist.rows});
         }
 
         const upgradedPost = await pool.query(
@@ -132,16 +127,16 @@ export async function updatePost(req, res){
         console.error('ERROR in updatePost:', error);
         return res.status(500).json({
             message: 'Internal server error',
-            error: error.message  // временно, для отладки
+            error: (error as Error).message   // временно, для отладки
         });
     }
 
 
 }
 
-export async function deletePost(req, res)  {
+export async function deletePost(req: Request, res: Response)  {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id;
         const postId = req.params.id;
 
         console.log('Delete attempt - User:', userId, 'Post:', postId);
@@ -158,9 +153,7 @@ export async function deletePost(req, res)  {
         );
 
         if (deletedPost.rows.length === 0) {
-            return res.status(200).json({
-                note: 'post does not exist or you do not have permission to delete it'
-            });
+            return res.status(200).json([]);
         }
 
         return res.status(200).json({
@@ -169,11 +162,12 @@ export async function deletePost(req, res)  {
         });
 
     } catch (error) {
+        const err = error as any;
         console.error('Error deleting post:', {
-            message: error.message,
-            code: error.code,
-            detail: error.detail,
-            hint: error.hint
+            message: err.message,
+            code: err.code,
+            detail: err.detail,
+            hint: err.hint
         });
 
         return res.status(500).json({error: 'Internal server error'});

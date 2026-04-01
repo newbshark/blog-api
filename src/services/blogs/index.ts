@@ -8,12 +8,9 @@ export async function getUsersBlogs(req: Request, res: Response){
             'SELECT user_id, title FROM blogs WHERE user_id = $1',
             [userId]
         );
-        if (getBlogs.rows.length === 0) {
-            return res.status(200).json({notFound: true});
-        }
         return res.status(200).json(getBlogs.rows);
     } catch (err) {
-        return res.status(500).json({notFound: true});
+        return res.status(500).json({notFound: 'something went wrong'});
     }
 }
 
@@ -57,7 +54,7 @@ export async function updateBlog(req: Request, res: Response){
             [blogId, userId]
         );
         if (isBlogExist.rows.length === 0) {
-            return res.status(200).json({notFound: true});
+            return res.status(200).json({notFound: "blog doesnt exist"});
         }
 
         const upgradedBlog = await pool.query("UPDATE blogs SET title = $1 WHERE id = $2 ", [title, blogId]);
