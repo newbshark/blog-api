@@ -4,9 +4,9 @@ import cors from 'cors';
 import {jwtValidationMiddleware} from './middleware/authenticate.js';
 
 import {login, register} from './services/auth/index.js';
-import {createPost, deletePost, getUsersPosts, updatePost} from "./services/posts/index.js";
-import {deleteBlog, getUsersBlogs, updateBlog} from "./services/blogs/index.js";
-import {createBlog} from "./services/blogs/index.js";
+import {createPost, deletePost, getUsersPosts, updatePost} from './services/posts/index.js';
+import {deleteBlog, getUsersBlogs, updateBlog} from './services/blogs/index.js';
+import {createBlog} from './services/blogs/index.js';
 
 const app = express();
 
@@ -15,6 +15,7 @@ app.use(express.json());
 
 app.post('/login', login);
 app.post('/register', register);
+
 app.use(jwtValidationMiddleware);
 
 app.post('/posts', createPost);

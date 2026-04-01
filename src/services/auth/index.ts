@@ -1,8 +1,9 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { pool } from '../../config/index.js';
+    import bcrypt from 'bcrypt';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { jwtSecret, pool } from '../../config/index.js';
+import { Request, Response } from 'express';
 
-export async function login(req, res) {
+export async function login(req: Request, res: Response) {
     const body = req.body;
     if (!body) {
         res.status(400).send('No body provided in request.');
@@ -35,10 +36,11 @@ export async function login(req, res) {
     //
 
     const expirationTime = '4h';
-    const jwtSecret = process.env.JWT_SECRET;
-    const jwtOptions = {
+
+    const jwtOptions: SignOptions = {
         expiresIn: expirationTime,
     };
+
     const accessToken = jwt.sign(payload, jwtSecret, jwtOptions);
     console.log(accessToken);
 
@@ -47,7 +49,7 @@ export async function login(req, res) {
     });
 }
 
-export async function register(req, res) {
+export async function register(req: Request, res: Response) {
     // {
     //     "name": "Name",
     //     "email": "email",
