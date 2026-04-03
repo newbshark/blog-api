@@ -2,8 +2,9 @@ import { pool } from '../../config/index.js';
 import { Request, Response } from 'express';
 
 export async function getUsersBlogs(req: Request, res: Response) {
-    const userId = req.user?.id;
-    const searchQuery = req.query.searchQuery;
+    const userId: number|undefined = req.user?.id;
+    const searchQuery: string | undefined =
+        typeof req.query.searchQuery === 'string' ? req.query.searchQuery : undefined;
     let limit = parseInt(req.query.limit as string ?? '20');
     let page = parseInt(req.query.page as string ?? '1');
 
@@ -11,13 +12,17 @@ export async function getUsersBlogs(req: Request, res: Response) {
     if (isNaN(page) || page < 1) page = 1;
 
     try {
-        const queryParams = [userId];
+        if(!userId){
+            return res.status(401).json({ error: "User not authenticated" })
+        }
+        const queryParams: (number | string)[] = [userId];
         let paramsIndex = 2;
         let queryToDb = 'SELECT user_id, title FROM blogs WHERE user_id = $1';
 
         if (searchQuery) {
             queryToDb = `${queryToDb} AND title ILIKE $${paramsIndex}`;
             queryParams.push(`%${searchQuery}%`);
+
             paramsIndex++;
         }
 
