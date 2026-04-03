@@ -1,12 +1,15 @@
 import express from 'express';
 
 import cors from 'cors';
-import {jwtValidationMiddleware} from './middleware/authenticate.js';
+import { jwtValidationMiddleware } from './common/middleware/authenticate.js';
 
 import {login, register} from './services/auth/index.js';
 import {createPost, deletePost, getUsersPosts, updatePost} from './services/posts/index.js';
 import {deleteBlog, getUsersBlogs, updateBlog} from './services/blogs/index.js';
 import {createBlog} from './services/blogs/index.js';
+import { LoggerService } from './common/logger/index.js';
+
+const logger = new LoggerService();
 
 const app = express();
 
@@ -29,7 +32,8 @@ app.post('/blogs', createBlog);
 app.patch('/blogs/:id', updateBlog);
 app.delete('/blogs/:id', deleteBlog);
 
-
 app.listen(process.env.PORT, () => {
-    console.log(`Listening on port ${process.env.PORT}`);
+    logger.info(`Server started on port ${process.env.PORT}`, 'server-start', {
+        port: process.env.PORT,
+    });
 });

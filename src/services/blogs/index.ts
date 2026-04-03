@@ -1,5 +1,6 @@
-import { pool } from '../../config/index.js';
+import { pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
+import { CreateBlogRequest, CreateBlogResponse } from './interfaces/index.js';
 
 export async function getUsersBlogs(req: Request, res: Response) {
     const userId: number|undefined = req.user?.id;
@@ -12,7 +13,7 @@ export async function getUsersBlogs(req: Request, res: Response) {
     if (isNaN(page) || page < 1) page = 1;
 
     try {
-        if(!userId){
+        if (!userId){
             return res.status(401).json({ error: "User not authenticated" })
         }
         const queryParams: (number | string)[] = [userId];
@@ -48,7 +49,8 @@ export async function getUsersBlogs(req: Request, res: Response) {
 export async function createBlog(req: Request, res: Response) {
     try {
         const userId = req.user?.id;
-        const title = req.body.title;
+        const createBlogBody = req.body as CreateBlogRequest;
+        const title = createBlogBody.title;
 
         if (!title) {
             return res.status(400).json({ note: "title is required" });
@@ -58,12 +60,12 @@ export async function createBlog(req: Request, res: Response) {
             return res.status(400).json({ note: "title too short (minimum 3 characters)" });
         }
 
-        const createdBlog = await pool.query(
+        const createdBlog = await pool.query<CreateBlogResponse>(
             'INSERT INTO blogs VALUES (DEFAULT, $1, $2) RETURNING *',
             [title, userId]
         );
-        return res.status(201).json(createdBlog.rows[0]);
 
+        return res.status(201).json(createdBlog.rows[0]);
     } catch (err) {
         console.error('Error in createBlog:', err);
         return res.status(500).json({ error: 'something went wrong' });

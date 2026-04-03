@@ -1,6 +1,6 @@
-    import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { jwtSecret, pool } from '../../config/index.js';
+import { jwtSecret, pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
 
 export async function login(req: Request, res: Response) {
