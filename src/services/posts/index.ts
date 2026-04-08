@@ -1,5 +1,9 @@
-import { pool } from '../../config/index.js';
+import { pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
+import { BasicPostResponse, UpdatePostResponse } from './interfaces/index.js';
+import { LoggerService } from '../../common/logger/index.js';
+
+const logger = new LoggerService();
 
 // limit=20&page=1&searchQuery=солнышко
 export async function getUsersPosts(req: Request, res: Response) {
@@ -75,14 +79,17 @@ export async function createPost(req: Request, res: Response) {
     });
 }
 
-export async function updatePost(req: Request, res: Response) {
+export async function updatePost(req: Request, res: Response): Promise<Response<UpdatePostResponse>> {
+    const userId = req.user?.id;
+    const { content, title } = req.body;
+    const postId = Number(req.params.id);
+
     try {
-        const userId = req.user?.id;
-        const { content, title } = req.body;
-        const postId = Number(req.params.id);
-
-        console.log('Updating post:', { postId, content, userId });
-
+        logger.info('Updating post',
+            'update-post-started',
+            {
+                userId, postId, content, title,
+            });
         if (!title) {
             return res.status(400).json({ note: 'title must be at least 1 character' });
         }
@@ -106,17 +113,20 @@ export async function updatePost(req: Request, res: Response) {
             return res.status(404).json({ error: "Post not found" });
         }
 
-        const upgradedPost = await pool.query(
+        const upgradedPost = await pool.query<BasicPostResponse>(
             'UPDATE posts SET content = $1, title = $2 WHERE id = $3 AND user_id = $4 RETURNING *',
             [content, title, postId, userId]
         );
 
         return res.status(200).json({
-            result: upgradedPost.rows[0]
+            result: upgradedPost.rows[0],
         });
-
     } catch (error) {
-        console.error('ERROR in updatePost:', error);
+        logger.error('Error in updating post', 'update-post-error', {
+            error,
+            userId,
+            postId,
+        });
         const err = error as any;
         return res.status(500).json({
             message: 'Internal server error',

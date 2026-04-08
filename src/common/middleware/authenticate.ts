@@ -1,4 +1,4 @@
-import { authenticate } from '../services/auth/jwt-validate.js';
+import { authenticate } from '../../services/auth/jwt-validate.js';
 import { Request, Response, NextFunction } from 'express';
 
 export async function jwtValidationMiddleware(req: Request,
