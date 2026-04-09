@@ -1,17 +1,28 @@
 import { pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
-import { BasicPostResponse, UpdatePostResponse } from './interfaces/index.js';
 import { LoggerService } from '../../common/logger/index.js';
+import type { PostsQuery } from './interfaces/index.js';
+import type { 
+    UpdatePostBody, 
+    CreatePostBody, 
+    BasicPostResponse, 
+    UpdatePostResponse 
+} from './interfaces/index.js';
 
 const logger = new LoggerService();
 
-// limit=20&page=1&searchQuery=солнышко
+
 export async function getUsersPosts(req: Request, res: Response) {
     const userId = req.user?.id ?? 7;
 
-    const searchQuery = req.query.searchQuery;
-    const limit = parseInt(req.query.limit as string ?? '20');
-    const page = parseInt(req.query.page as string ?? '1');
+    const { searchQuery, limit, page } = req.query as PostsQuery;
+
+    const parsedLimit = parseInt(limit ?? '20');
+    const parsedPage = parseInt(page ?? '1');
+
+    const safeLimit = Number.isNaN(parsedLimit) || parsedLimit < 1 ? 20 : parsedLimit;
+    const safePage = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+    
 
     try {
         let queryToDb = 'SELECT id, title, content FROM posts WHERE user_id = $1';
@@ -25,10 +36,10 @@ export async function getUsersPosts(req: Request, res: Response) {
         }
 
         queryToDb = `${queryToDb} LIMIT $${paramsIndex}`;
-        queryParams.push(limit);
+        queryParams.push(safeLimit);
         paramsIndex++;
 
-        const offset = (page - 1) * limit;
+        const offset = (safePage - 1) * safeLimit;
         queryToDb = `${queryToDb} OFFSET $${paramsIndex}`;
         queryParams.push(offset);
 
@@ -44,10 +55,9 @@ export async function getUsersPosts(req: Request, res: Response) {
 
 // Юзер создает пост
 export async function createPost(req: Request, res: Response) {
+    const { title, content, blog_id } = req.body as CreatePostBody;
     const userId = req.user?.id;
-    const title = req.body.title;
-    const content = req.body.content;
-    const blogId = req.body.blog_id;
+    const blogId = blog_id;
 
     if (!title || title.length < 3) {
         return res.status(400).json({
@@ -80,8 +90,8 @@ export async function createPost(req: Request, res: Response) {
 }
 
 export async function updatePost(req: Request, res: Response): Promise<Response<UpdatePostResponse>> {
+    const { content, title } = req.body as UpdatePostBody;
     const userId = req.user?.id;
-    const { content, title } = req.body;
     const postId = Number(req.params.id);
 
     try {

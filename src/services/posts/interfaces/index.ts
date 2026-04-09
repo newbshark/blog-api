@@ -7,3 +7,20 @@ export interface BasicPostResponse {
 export interface UpdatePostResponse {
     result: BasicPostResponse;
 }
+
+export interface PostsQuery {
+    searchQuery?: string;
+    limit?: string;
+    page?: string;
+}
+
+export interface CreatePostBody {
+    title: string;
+    content: string;
+    blog_id: number;
+}
+
+export interface UpdatePostBody {
+    title?: string;
+    content?: string;
+}
