@@ -4,9 +4,11 @@ export interface BasicPostResponse {
     content: string;
 }
 
-export interface UpdatePostResponse {
-    result: BasicPostResponse;
-}
+export type UpdatePostResponse =
+| { result: BasicPostResponse }
+| { error: string }
+| { message: string; error: string };
+
 
 export interface PostsQuery {
     searchQuery?: string;

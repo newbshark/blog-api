@@ -55,18 +55,18 @@ export async function getUsersPosts(req: Request, res: Response) {
 
 // Юзер создает пост
 export async function createPost(req: Request, res: Response) {
-    const { title, content, blog_id } = req.body as CreatePostBody;
+    const { title, content, blog_id } = req.body as CreatePostBody; 
     const userId = req.user?.id;
     const blogId = blog_id;
 
     if (!title || title.length < 3) {
         return res.status(400).json({
-            message: 'title must be at least 3 characters',
+            error: 'bad_request'
         });
     }
 
     if (!content || content.length === 0) {
-        return res.status(400).json({ note: "fill content line" });
+        return res.status(400).json({ error:'bad_request'});
     }
 
     const isBlogExists = await pool.query(
@@ -75,7 +75,7 @@ export async function createPost(req: Request, res: Response) {
     );
 
     if (isBlogExists.rows.length === 0) {
-        return res.status(404).json({ error: "Blog not found" });
+        return res.status(404).json({ error: 'blog_not_found' });
     }
 
     const createdPostResult = await pool.query(
@@ -89,8 +89,11 @@ export async function createPost(req: Request, res: Response) {
     });
 }
 
-export async function updatePost(req: Request, res: Response): Promise<Response<UpdatePostResponse>> {
-    const { content, title } = req.body as UpdatePostBody;
+export async function updatePost(
+    req: Request<{ id: string }, UpdatePostResponse, UpdatePostBody>,
+    res: Response<UpdatePostResponse>
+    ): Promise<Response<UpdatePostResponse>> {
+    const { content, title } = req.body ;
     const userId = req.user?.id;
     const postId = Number(req.params.id);
 
@@ -101,16 +104,16 @@ export async function updatePost(req: Request, res: Response): Promise<Response<
                 userId, postId, content, title,
             });
         if (!title) {
-            return res.status(400).json({ note: 'title must be at least 1 character' });
+            return res.status(400).json({ error: 'bad_request' });
         }
 
         if (!postId || isNaN(postId) || postId < 1) {
-            return res.status(400).json({ note: "bad request" });
+            return res.status(400).json({ error: 'bad_request' });
         }
 
         if (!content || content.length < 3) {
             return res.status(400).json({
-                message: "Content must be at least 3 characters long"
+                error: 'bad_request'
             });
         }
 
@@ -120,7 +123,7 @@ export async function updatePost(req: Request, res: Response): Promise<Response<
         );
 
         if (isPostExist.rows.length === 0) {
-            return res.status(404).json({ error: "Post not found" });
+            return res.status(404).json({ error: 'post_not_found' });
         }
 
         const upgradedPost = await pool.query<BasicPostResponse>(
@@ -153,7 +156,7 @@ export async function deletePost(req: Request, res: Response) {
         console.log('Delete attempt - User:', userId, 'Post:', postId);
 
         if (!postId) {
-            return res.status(400).json({ note: 'missing post_id' });
+            return res.status(400).json({ error: 'bad_request' });
         }
 
         const deletedPost = await pool.query(
@@ -162,7 +165,7 @@ export async function deletePost(req: Request, res: Response) {
         );
 
         if (deletedPost.rows.length === 0) {
-            return res.status(404).json({ error: "Post not found" });
+            return res.status(404).json({ error: 'post_not_found' });
         }
 
         return res.status(200).json({
