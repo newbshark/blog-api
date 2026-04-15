@@ -49,7 +49,7 @@ export async function getUsersPosts(req: Request, res: Response) {
 
     } catch (err) {
         console.error('Error in getUsersPosts:', err);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "internal_server_error" });
     }
 }
 
@@ -140,10 +140,8 @@ export async function updatePost(
             userId,
             postId,
         });
-        const err = error as any;
         return res.status(500).json({
-            message: 'Internal server error',
-            error: err.message
+            error: 'internal_server_error'
         });
     }
 }
@@ -182,6 +180,6 @@ export async function deletePost(req: Request, res: Response) {
             hint: err.hint
         });
 
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'internal_server_error' });
     }
 }
