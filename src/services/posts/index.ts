@@ -6,16 +6,20 @@ import type {
     UpdatePostBody, 
     CreatePostBody, 
     BasicPostResponse, 
-    UpdatePostResponse 
+    UpdatePostResponse,
+    DeletePostResponse
 } from './interfaces/index.js';
 
 const logger = new LoggerService();
 
 
-export async function getUsersPosts(req: Request, res: Response) {
+export async function getUsersPosts(
+    req: Request<{}, BasicPostResponse[] | { error: string } , {}, PostsQuery>,
+    res: Response<BasicPostResponse[] | { error: string }> 
+    ){
     const userId = req.user?.id ?? 7;
 
-    const { searchQuery, limit, page } = req.query as PostsQuery;
+    const { searchQuery, limit, page } = req.query;
 
     const parsedLimit = parseInt(limit ?? '20');
     const parsedPage = parseInt(page ?? '1');
@@ -54,8 +58,10 @@ export async function getUsersPosts(req: Request, res: Response) {
 }
 
 // Юзер создает пост
-export async function createPost(req: Request, res: Response) {
-    const { title, content, blog_id } = req.body as CreatePostBody; 
+export async function createPost(
+    req: Request<{}, { id: number } | { error: string }, CreatePostBody>,
+    res: Response<{ id: number } | { error: string }>) {
+    const { title, content, blog_id } = req.body; 
     const userId = req.user?.id;
     const blogId = blog_id;
 
@@ -146,7 +152,10 @@ export async function updatePost(
     }
 }
 
-export async function deletePost(req: Request, res: Response) {
+export async function deletePost(
+    req: Request<{ id: string }, DeletePostResponse, {}, {}>,
+    res: Response<DeletePostResponse>
+){
     try {
         const userId = req.user?.id;
         const postId = req.params.id;

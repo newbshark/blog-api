@@ -26,3 +26,7 @@ export interface UpdatePostBody {
     title?: string;
     content?: string;
 }
+
+export type DeletePostResponse = 
+| { message: string; post: BasicPostResponse }
+| { error: string };
