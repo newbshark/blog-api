@@ -7,8 +7,10 @@ export interface BasicPostResponse {
 export type UpdatePostResponse =
 | { result: BasicPostResponse }
 | { error: string }
-| { message: string; error: string };
 
+export interface PostId {
+    id: number;
+}
 
 export interface PostsQuery {
     searchQuery?: string;

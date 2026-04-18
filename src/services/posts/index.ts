@@ -2,6 +2,7 @@ import { pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
 import { LoggerService } from '../../common/logger/index.js';
 import type { PostsQuery } from './interfaces/index.js';
+import type { PostId } from './interfaces/index.js';
 import type { 
     UpdatePostBody, 
     CreatePostBody, 
@@ -11,6 +12,7 @@ import type {
 } from './interfaces/index.js';
 
 const logger = new LoggerService();
+
 
 
 export async function getUsersPosts(
@@ -59,20 +61,20 @@ export async function getUsersPosts(
 
 // Юзер создает пост
 export async function createPost(
-    req: Request<{}, { id: number } | { error: string }, CreatePostBody>,
-    res: Response<{ id: number } | { error: string }>) {
+    req: Request<{}, PostId| { error: string }, CreatePostBody>,
+    res: Response< PostId | { error: string }>) {
     const { title, content, blog_id } = req.body; 
     const userId = req.user?.id;
     const blogId = blog_id;
 
     if (!title || title.length < 3) {
         return res.status(400).json({
-            error: 'bad_request'
+            error: 'should consist min 3 letters'
         });
     }
 
     if (!content || content.length === 0) {
-        return res.status(400).json({ error:'bad_request'});
+        return res.status(400).json({ error:'should consist content '});
     }
 
     const isBlogExists = await pool.query(
@@ -96,7 +98,7 @@ export async function createPost(
 }
 
 export async function updatePost(
-    req: Request<{ id: string }, UpdatePostResponse, UpdatePostBody>,
+    req: Request<PostId, UpdatePostResponse, UpdatePostBody>,
     res: Response<UpdatePostResponse>
     ): Promise<Response<UpdatePostResponse>> {
     const { content, title } = req.body ;
@@ -110,16 +112,16 @@ export async function updatePost(
                 userId, postId, content, title,
             });
         if (!title) {
-            return res.status(400).json({ error: 'bad_request' });
+            return res.status(400).json({ error: 'should consist title' });
         }
 
         if (!postId || isNaN(postId) || postId < 1) {
-            return res.status(400).json({ error: 'bad_request' });
+            return res.status(400).json({ error: 'post id not found' });
         }
 
         if (!content || content.length < 3) {
             return res.status(400).json({
-                error: 'bad_request'
+                error: 'should consist min 3 letters'
             });
         }
 
@@ -153,7 +155,7 @@ export async function updatePost(
 }
 
 export async function deletePost(
-    req: Request<{ id: string }, DeletePostResponse, {}, {}>,
+    req: Request<PostId, DeletePostResponse, {}, {}>,
     res: Response<DeletePostResponse>
 ){
     try {
@@ -163,7 +165,7 @@ export async function deletePost(
         console.log('Delete attempt - User:', userId, 'Post:', postId);
 
         if (!postId) {
-            return res.status(400).json({ error: 'bad_request' });
+            return res.status(400).json({ error: 'that post not foundt' });
         }
 
         const deletedPost = await pool.query(
