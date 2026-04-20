@@ -1,14 +1,15 @@
 import { pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
 import { LoggerService } from '../../common/logger/index.js';
-import type { PostsQuery } from './interfaces/index.js';
-import type { PostId } from './interfaces/index.js';
 import type { 
     UpdatePostBody, 
     CreatePostBody, 
     BasicPostResponse, 
     UpdatePostResponse,
-    DeletePostResponse
+    DeletePostResponse,
+    PostId, 
+    ErrorExpression, 
+    PostsQuery
 } from './interfaces/index.js';
 
 const logger = new LoggerService();
@@ -16,8 +17,8 @@ const logger = new LoggerService();
 
 
 export async function getUsersPosts(
-    req: Request<{}, BasicPostResponse[] | { error: string } , {}, PostsQuery>,
-    res: Response<BasicPostResponse[] | { error: string }> 
+    req: Request<{}, BasicPostResponse[] | ErrorExpression , {}, PostsQuery>,
+    res: Response<BasicPostResponse[] | ErrorExpression> 
     ){
     const userId = req.user?.id ?? 7;
 
@@ -61,8 +62,8 @@ export async function getUsersPosts(
 
 // Юзер создает пост
 export async function createPost(
-    req: Request<{}, PostId| { error: string }, CreatePostBody>,
-    res: Response< PostId | { error: string }>) {
+    req: Request<{}, PostId| ErrorExpression, CreatePostBody>,
+    res: Response< PostId | ErrorExpression>) {
     const { title, content, blog_id } = req.body; 
     const userId = req.user?.id;
     const blogId = blog_id;

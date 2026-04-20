@@ -9,3 +9,4 @@ declare global {
 export interface JwtUser {
     id: number;
 }
+ 

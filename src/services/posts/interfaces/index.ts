@@ -1,3 +1,5 @@
+
+
 export interface BasicPostResponse {
     id: number;
     title: string;
@@ -10,6 +12,10 @@ export type UpdatePostResponse =
 
 export interface PostId {
     id: number;
+}
+
+export interface ErrorExpression {
+    error: string ;
 }
 
 export interface PostsQuery {
