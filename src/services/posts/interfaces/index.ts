@@ -1,11 +1,21 @@
+
+
 export interface BasicPostResponse {
     id: number;
     title: string;
     content: string;
 }
 
-export interface UpdatePostResponse {
-    result: BasicPostResponse;
+export type UpdatePostResponse =
+| { result: BasicPostResponse }
+| { error: string }
+
+export interface PostId {
+    id: number;
+}
+
+export interface ErrorExpression {
+    error: string ;
 }
 
 export interface PostsQuery {
@@ -24,3 +34,7 @@ export interface UpdatePostBody {
     title?: string;
     content?: string;
 }
+
+export type DeletePostResponse = 
+| { message: string; post: BasicPostResponse }
+| { error: string };

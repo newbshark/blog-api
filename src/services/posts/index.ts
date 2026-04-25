@@ -1,21 +1,28 @@
 import { pool } from '../../common/config/index.js';
 import { Request, Response } from 'express';
 import { LoggerService } from '../../common/logger/index.js';
-import type { PostsQuery } from './interfaces/index.js';
 import type { 
     UpdatePostBody, 
     CreatePostBody, 
     BasicPostResponse, 
-    UpdatePostResponse 
+    UpdatePostResponse,
+    DeletePostResponse,
+    PostId, 
+    ErrorExpression, 
+    PostsQuery
 } from './interfaces/index.js';
 
 const logger = new LoggerService();
 
 
-export async function getUsersPosts(req: Request, res: Response) {
+
+export async function getUsersPosts(
+    req: Request<{}, BasicPostResponse[] | ErrorExpression , {}, PostsQuery>,
+    res: Response<BasicPostResponse[] | ErrorExpression> 
+    ){
     const userId = req.user?.id ?? 7;
 
-    const { searchQuery, limit, page } = req.query as PostsQuery;
+    const { searchQuery, limit, page } = req.query;
 
     const parsedLimit = parseInt(limit ?? '20');
     const parsedPage = parseInt(page ?? '1');
@@ -49,24 +56,26 @@ export async function getUsersPosts(req: Request, res: Response) {
 
     } catch (err) {
         console.error('Error in getUsersPosts:', err);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "internal_server_error" });
     }
 }
 
 // Юзер создает пост
-export async function createPost(req: Request, res: Response) {
-    const { title, content, blog_id } = req.body as CreatePostBody;
+export async function createPost(
+    req: Request<{}, PostId| ErrorExpression, CreatePostBody>,
+    res: Response< PostId | ErrorExpression>) {
+    const { title, content, blog_id } = req.body; 
     const userId = req.user?.id;
     const blogId = blog_id;
 
     if (!title || title.length < 3) {
         return res.status(400).json({
-            message: 'title must be at least 3 characters',
+            error: 'should consist min 3 letters'
         });
     }
 
     if (!content || content.length === 0) {
-        return res.status(400).json({ note: "fill content line" });
+        return res.status(400).json({ error:'should consist content '});
     }
 
     const isBlogExists = await pool.query(
@@ -75,7 +84,7 @@ export async function createPost(req: Request, res: Response) {
     );
 
     if (isBlogExists.rows.length === 0) {
-        return res.status(404).json({ error: "Blog not found" });
+        return res.status(404).json({ error: 'blog_not_found' });
     }
 
     const createdPostResult = await pool.query(
@@ -89,8 +98,11 @@ export async function createPost(req: Request, res: Response) {
     });
 }
 
-export async function updatePost(req: Request, res: Response): Promise<Response<UpdatePostResponse>> {
-    const { content, title } = req.body as UpdatePostBody;
+export async function updatePost(
+    req: Request<PostId, UpdatePostResponse, UpdatePostBody>,
+    res: Response<UpdatePostResponse>
+    ): Promise<Response<UpdatePostResponse>> {
+    const { content, title } = req.body ;
     const userId = req.user?.id;
     const postId = Number(req.params.id);
 
@@ -101,16 +113,16 @@ export async function updatePost(req: Request, res: Response): Promise<Response<
                 userId, postId, content, title,
             });
         if (!title) {
-            return res.status(400).json({ note: 'title must be at least 1 character' });
+            return res.status(400).json({ error: 'should consist title' });
         }
 
         if (!postId || isNaN(postId) || postId < 1) {
-            return res.status(400).json({ note: "bad request" });
+            return res.status(400).json({ error: 'post id not found' });
         }
 
         if (!content || content.length < 3) {
             return res.status(400).json({
-                message: "Content must be at least 3 characters long"
+                error: 'should consist min 3 letters'
             });
         }
 
@@ -120,7 +132,7 @@ export async function updatePost(req: Request, res: Response): Promise<Response<
         );
 
         if (isPostExist.rows.length === 0) {
-            return res.status(404).json({ error: "Post not found" });
+            return res.status(404).json({ error: 'post_not_found' });
         }
 
         const upgradedPost = await pool.query<BasicPostResponse>(
@@ -137,15 +149,16 @@ export async function updatePost(req: Request, res: Response): Promise<Response<
             userId,
             postId,
         });
-        const err = error as any;
         return res.status(500).json({
-            message: 'Internal server error',
-            error: err.message
+            error: 'internal_server_error'
         });
     }
 }
 
-export async function deletePost(req: Request, res: Response) {
+export async function deletePost(
+    req: Request<PostId, DeletePostResponse, {}, {}>,
+    res: Response<DeletePostResponse>
+){
     try {
         const userId = req.user?.id;
         const postId = req.params.id;
@@ -153,7 +166,7 @@ export async function deletePost(req: Request, res: Response) {
         console.log('Delete attempt - User:', userId, 'Post:', postId);
 
         if (!postId) {
-            return res.status(400).json({ note: 'missing post_id' });
+            return res.status(400).json({ error: 'that post not foundt' });
         }
 
         const deletedPost = await pool.query(
@@ -162,7 +175,7 @@ export async function deletePost(req: Request, res: Response) {
         );
 
         if (deletedPost.rows.length === 0) {
-            return res.status(404).json({ error: "Post not found" });
+            return res.status(404).json({ error: 'post_not_found' });
         }
 
         return res.status(200).json({
@@ -179,6 +192,6 @@ export async function deletePost(req: Request, res: Response) {
             hint: err.hint
         });
 
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'internal_server_error' });
     }
 }
